@@ -1,0 +1,74 @@
+name: inscripcionuce
+
+services:
+  # ---------------- infraestructura ----------------
+  academico-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: academico
+      POSTGRES_USER: uce
+      POSTGRES_PASSWORD: uce123
+    volumes: [ academico-data:/var/lib/postgresql/data ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uce -d academico"]
+      interval: 5s
+      retries: 12
+
+  inscripciones-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: inscripciones
+      POSTGRES_USER: uce
+      POSTGRES_PASSWORD: uce123
+    volumes: [ inscripciones-data:/var/lib/postgresql/data ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uce -d inscripciones"]
+      interval: 5s
+      retries: 12
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: uce
+      RABBITMQ_DEFAULT_PASS: uce123
+    ports:
+      - "15672:15672"        # consola web: uce / uce123
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 12
+
+  # ---------------- servicios ----------------
+  academico:
+    build: ./servicios/academico
+    environment:
+      ConnectionStrings__Academico: "Host=academico-db;Database=academico;Username=uce;Password=uce123"
+    depends_on:
+      academico-db: { condition: service_healthy }
+
+  inscripciones:
+    build: ./servicios/inscripciones
+    environment:
+      ConnectionStrings__Inscripciones: "Host=inscripciones-db;Database=inscripciones;Username=uce;Password=uce123"
+      Servicios__Academico: "http://academico:8080"
+      RabbitMq__Uri: "amqp://uce:uce123@rabbitmq:5672/"
+    depends_on:
+      inscripciones-db: { condition: service_healthy }
+      rabbitmq:         { condition: service_healthy }
+
+  notificaciones:
+    build: ./servicios/notificaciones
+    environment:
+      RABBITMQ_URI: "amqp://uce:uce123@rabbitmq:5672/"
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
+  gateway:
+    build: ./servicios/gateway
+    ports:
+      - "8080:8080"          # el ÚNICO puerto expuesto al exterior
+    depends_on: [ academico, inscripciones, notificaciones ]
+
+volumes:
+  academico-data:
+  inscripciones-data:
