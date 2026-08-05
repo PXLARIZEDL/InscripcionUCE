@@ -1,0 +1,36 @@
+# ─── .NET ──────────────────────────────────────────────────────────────
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.trx
+
+# ─── Python (notificaciones — FastAPI) ─────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Secretos y configuración local ────────────────────────────────────
+# Nunca commitear: cada servicio lee su config del entorno.
+.env
+.env.*
+!.env.example
+
+# ─── Sistema operativo / editores ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
