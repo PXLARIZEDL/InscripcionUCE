@@ -23,6 +23,10 @@ env/
 .mypy_cache/
 .ruff_cache/
 
+# ─── Bases de datos locales (SQLite — desarrollo sin Docker) ───────────
+academico.db
+academico.db-*
+
 # ─── Secretos y configuración local ────────────────────────────────────
 # Nunca commitear: cada servicio lee su config del entorno.
 .env
